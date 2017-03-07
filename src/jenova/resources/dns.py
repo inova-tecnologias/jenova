@@ -16,7 +16,7 @@ class DnsBackupBaseResource(BaseResource):
 
     # create backup if haven't one in the last 24hrs.
     yesterday = datetime.now() - timedelta(days=1)
-    if not DnsRecordBackup.query.filter(DnsRecordBackup.created_at >= yesterday).first():
+    if not DnsRecordBackup.query.filter(DnsRecordBackup.domain == domain_name).filter(DnsRecordBackup.created_at >= yesterday).first():
       try:
         res = self.pdns.get_domain(domain_name)
       except DnsError, e:
