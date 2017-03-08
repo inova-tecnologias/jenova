@@ -15,7 +15,7 @@ from jenova.resources.base import BaseResource, abort_if_obj_doesnt_exist
 from jenova.components import db, ZimbraRequest, ZimbraRequestError, Config, PowerDns, Mxhero, DnsError
 from jenova.models import (
   Client, Domain, DomainServiceState, Service, Cos,
-  DomainServiceStateSchema, DomainSchema, Reseller, ResellerServices
+  DomainServiceStateSchema, DomainSchema, Reseller, ResellerServices, DnsRecordBackup
 )
 from jenova.components.tasks import (
   update_cos_into_domain_zimbra_task, create_domain_zimbra_task,
@@ -442,8 +442,11 @@ class DomainServiceResource(BaseResource):
     domain = abort_if_obj_doesnt_exist('name', domain_name, Domain)
     service = abort_if_obj_doesnt_exist('name', service_name, Service)
     self.parser.add_argument('sync', type=str, location='args', choices=('0', '1'))
-    reqdata = self.parser.parse_args()
+    self.parser.add_argument('force', type=int, location='args', default=0, choices=(0, 1))
 
+    reqdata = self.parser.parse_args()
+    force = reqdata.get('force') and True
+    # print(force)
     synchronous = reqdata.get('sync') and True
     job_id, status_code = None, 200
 
@@ -454,7 +457,22 @@ class DomainServiceResource(BaseResource):
       try:
         pdns = PowerDns()  
         pdns.config(pdns_server = service.service_host, api_key = cred.secret)
-        pdns.delete_domain(domain_name)
+        
+        if force:
+          res = pdns.get_domain(domain_name)
+          compressed_records = res.json()['records']
+
+          backup = DnsRecordBackup(
+            domain = domain_name,
+            records = compressed_records
+          )
+
+          self.logger.debug('backuping up zone: %s' % domain_name)
+
+          db.session.add(backup)
+          db.session.commit()
+
+        pdns.delete_domain(domain_name = domain_name, force = force)
       except DnsError, e:
         if not e.status_code == 404:
           abort(e.status_code, message = e.message)
