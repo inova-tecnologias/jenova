@@ -1,4 +1,4 @@
-from flask.ext.restful import abort, request
+from flask_restful import abort, request
 import json, datetime
 
 from jenova.resources.base import BaseResource, abort_if_obj_doesnt_exist

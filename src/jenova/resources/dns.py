@@ -1,4 +1,4 @@
-from flask.ext.restful import abort, Resource, reqparse
+from flask_restful import abort, Resource, reqparse
 from datetime import datetime, timedelta
 import hmac, hashlib, time, uuid, re, json, gzip, ast
 

@@ -6,8 +6,8 @@ from flask import (
 from werkzeug.exceptions import default_exceptions
 from werkzeug.exceptions import HTTPException
 from werkzeug.contrib.fixers import ProxyFix
-from flask.ext.cors import CORS
-from flask.ext import restful
+from flask_cors import CORS
+import flask_restful as restful
 from traceback import format_exc
 
 from jenova.components import db, create_app, Config, CallLogger
@@ -200,7 +200,7 @@ try:
   if is_dev():
     with app.app_context():
       db.create_all()
-      from jenova.models import User, UserSchema
+      from jenova.models import User, UserSchema, Scope, Permissions
       from jenova.components import Security
       from datetime import datetime
       import jwt
@@ -215,18 +215,16 @@ try:
           global_admin = True
         )
 
-        '''
-        for scope in DEFAULT_SCOPES:
-          scope = Scope(name = scope_name)
-          scope.permissions = Permissions(
-            read = reqdata.get('read') or False,
-            write = reqdata.get('write') or False,
-            delete = reqdata.get('delete') or False,
-            edit = reqdata.get('edit') or False
-          )
-          db.session.add(scope)
-          db.session.commit()
-        '''
+        # for scope_name in DEFAULT_SCOPES:
+        #   scope = Scope(name = scope_name)
+        #   scope.permissions = Permissions(
+        #     read = True,
+        #     write = True,
+        #     delete = True,
+        #     edit = True
+        #   )
+        #   db.session.add(scope)
+        #   db.session.commit()
 
 
         #plain_secretkey, hashed_secretkey = os.environ.get('SECRETKEY'), os.environ.get('HASHED_SECRETKEY')
@@ -252,6 +250,8 @@ except Exception, ex:
 
 if __name__ == '__main__':
   try:
+    if is_dev():
+      app.run(host='0.0.0.0', port=8443, debug=True, threaded=True)
     context = ssl.SSLContext(ssl.PROTOCOL_SSLv23)
     context.load_cert_chain(os.environ.get('JNV_SSL_CERT'), os.environ.get('JNV_SSL_KEY'))
     app.run(host='0.0.0.0', port=8443, debug=True, ssl_context=context, threaded=True)

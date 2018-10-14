@@ -1,5 +1,5 @@
 import json, requests, re, ast
-from flask.ext.restful import abort
+from flask_restful import abort
 from .exceptions import DnsError
 from datetime import datetime, timedelta
 from .common import logger

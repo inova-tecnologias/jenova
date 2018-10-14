@@ -1,4 +1,4 @@
-from flask.ext.restful import abort
+from flask_restful import abort
 from datetime import datetime
 from time import sleep
 
