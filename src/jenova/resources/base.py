@@ -1,7 +1,7 @@
 import jwt, base64, json
 from collections import namedtuple
 from werkzeug.exceptions import InternalServerError
-from flask.ext.restful import reqparse, request, Resource, abort
+from flask_restful import reqparse, request, Resource, abort
 from functools import wraps
 from time import sleep
 
@@ -24,7 +24,9 @@ DEFAULT_SCOPES = [
   'service',
   'store',
   'users',
-  'zimbra'
+  'zimbra',
+  'client',
+  'permissions'
 ]
 PERMS = ['write', 'read', 'edit', 'delete']
 
@@ -34,7 +36,6 @@ def abort_if_obj_doesnt_exist(filter_by, target, model_object):
       target = int(target)
     except ValueError, e:
       raise
-      
   query = { filter_by : target }
   result = model_object.query.filter_by(**query).first()
   if not result:
@@ -101,8 +102,8 @@ class BaseResource(Resource):
     token = parts[1]
     try:
       payload = jwt.decode(
-        token, 
-        Security.get_jwt_skey(), 
+        token,
+        Security.get_jwt_skey(),
         algorithms = ['HS256']
       )
     except jwt.ExpiredSignature:
@@ -242,7 +243,7 @@ class TaskResource(BaseResource):
     except Exception:
       task_state = 'ERROR'
       task_executed = True
-    
+
     return {
       'response' : {
         'task_state' : task_state,

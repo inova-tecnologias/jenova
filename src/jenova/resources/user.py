@@ -1,7 +1,7 @@
 from datetime import datetime
 import uuid, jwt
 
-from flask.ext.restful import abort, Resource, reqparse, request
+from flask_restful import abort, Resource, reqparse, request
 from jenova.resources.base import BaseResource, abort_if_obj_doesnt_exist
 from jenova.components import Security, db
 from jenova.models import Client, User, Scope, ScopeSchema, Permissions, UserSchema, Reseller

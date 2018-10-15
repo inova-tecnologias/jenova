@@ -80,7 +80,7 @@ powerdns:
     - PDNS_DB=powerdns
 
 zimbra:
-  image: zextras/zimbra8:8.6.0p7
+  image: jorgedlcruz/zimbra
   hostname: zimbra
   domainname: jenova.com
   mem_limit: 2G

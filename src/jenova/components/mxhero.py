@@ -1,6 +1,6 @@
 import json, requests
 from .exceptions import mxheroError
-from flask.ext.restful import abort
+from flask_restful import abort
 
 
 class Mxhero(object):

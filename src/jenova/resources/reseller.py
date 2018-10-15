@@ -1,4 +1,4 @@
-from flask.ext.restful import abort, request
+from flask_restful import abort, request
 from datetime import datetime
 import uuid
 

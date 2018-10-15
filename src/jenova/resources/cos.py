@@ -1,5 +1,5 @@
 import ast
-from flask.ext.restful import abort, request
+from flask_restful import abort, request
 from jenova.resources.base import BaseResource, abort_if_obj_doesnt_exist
 from jenova.models import Cos, CosSchema, Features, Service, Domain
 from jenova.components import db

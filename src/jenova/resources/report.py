@@ -1,4 +1,4 @@
-from flask.ext.restful import abort
+from flask_restful import abort
 from redis import StrictRedis
 import pickle
 from jenova.resources.base import BaseResource, abort_if_obj_doesnt_exist
@@ -16,13 +16,23 @@ class ResellerReportResource(BaseResource):
     config = Config.load()
     self.redis = StrictRedis(config['redishost'])
 
+  @property
+  def scope(self):
+    return 'zimbra'
+
+  # Overrided
+  def is_forbidden(self, **kwargs):
+    """ Check for access rules:
+    A global admin must not have any restrictions.
+    A requester must have access of your own domains (reseller) only if is an admin
+    A requester must have access of your own domains (client)
+    """
+    if self.is_global_admin: return
+
   def post(self, target_reseller):
-    
     reseller = abort_if_obj_doesnt_exist(self.filter_by, target_reseller, Reseller)
-    
-    self.parser.add_argument('sync', type=str, choices=('0', '1'))    
+    self.parser.add_argument('sync', type=str, choices=('0', '1'))
     reqdata = self.parser.parse_args()
-    
     synchronous = reqdata.get('sync') and True
     job_id, status_code = None, 200
 
@@ -36,7 +46,6 @@ class ResellerReportResource(BaseResource):
       task_obj = update_zimbra_domain_report_task.apply
     else:
       task_obj = update_zimbra_domain_report_task.apply_async
-    
     params = {}
     for domain in domains:
       for s in domain.services:
@@ -52,7 +61,7 @@ class ResellerReportResource(BaseResource):
           abort(400, message = 'Could not find any credentials for the service %s' % service.name)
 
         admin_user, admin_password = cred.identity, cred.secret
-        params[service.name] = { 
+        params[service.name] = {
           'zimbra_config' : {
             'service_api' : service.service_api,
             'admin_user' : admin_user,
@@ -116,18 +125,31 @@ class DomainReportResource(BaseResource):
     filters = ['id', 'name']
     super(DomainReportResource, self).__init__(filters)
 
+  # Overrided
+  def is_forbidden(self, **kwargs):
+    """ Check for access rules:
+    A global admin must not have any restrictions.
+    A requester must have access of your own domains (reseller) only if is an admin
+    A requester must have access of your own domains (client)
+    """
+    if self.is_global_admin: return
+
+  @property
+  def scope(self):
+    return 'zimbra'
+
   def get(self, target_domain, target_service):
     domain = abort_if_obj_doesnt_exist('name', target_domain, Domain)
-    service = abort_if_obj_doesnt_exist('name', target_service, Service) 
-    
+    service = abort_if_obj_doesnt_exist('name', target_service, Service)
+
     cred = service.credentials
     if not cred:
       abort(400, message = 'Could not find any credentials for the service %s' % service.name)
 
     admin_user, admin_password = cred.identity, cred.secret
     report = ZimbraReport(
-      admin_url = service.service_api, 
-      admin_user = admin_user, 
+      admin_url = service.service_api,
+      admin_user = admin_user,
       admin_pass = admin_password,
     )
 

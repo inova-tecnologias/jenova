@@ -3,7 +3,7 @@ General information about domains and services
 """
 
 from sqlalchemy import distinct
-from flask.ext.restful import abort, Resource, reqparse
+from flask_restful import abort, Resource, reqparse
 from flask import redirect, request
 from datetime import datetime
 from celery import chain
